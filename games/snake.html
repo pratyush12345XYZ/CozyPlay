@@ -1,0 +1,534 @@
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cozy Snake</title>
+
+<style>
+body{
+  margin:0;
+  height:100vh;
+  background:#FFF7ED;
+  font-family:'Segoe UI',sans-serif;
+  color:#3F2E2E;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  overflow:hidden;
+}
+
+.top-bar{
+  width:100%;
+  padding:16px 30px;
+  display:flex;
+  justify-content:center;
+  position:relative;
+}
+.pause-btn{
+  position:absolute;
+  left:30px;
+  top:22px;
+  padding:8px 16px;
+  border-radius:20px;
+  background:#FED7AA;
+  border:none;
+  cursor:pointer;
+}
+.shop-btn{
+  position:absolute;
+  right:30px;
+  top:22px;
+  padding:8px 16px;
+  border-radius:20px;
+  background:#F59E0B;
+  color:white;
+  text-decoration:none;
+}
+
+.main{
+  display:flex;
+  gap:18px;
+  align-items:center;
+}
+
+.game-wrap{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+.theme-btn{
+  margin-top:10px;
+  padding:8px 16px;
+  border-radius:18px;
+  background:#FED7AA;
+  border:none;
+  cursor:pointer;
+  font-size:.85rem;
+}
+
+canvas{ border-radius:22px; }
+
+.panel{
+  background:#FFE8C8;
+  border-radius:18px;
+  padding:14px 16px;
+  width:180px;
+}
+.panel div{ margin-bottom:10px; font-size:.9rem; }
+
+.health-bar{
+  height:12px;
+  width:100%;
+  background:#E5E7EB;
+  border-radius:10px;
+  overflow:hidden;
+}
+.health-fill{
+  height:100%;
+  width:100%;
+  transition:width .25s;
+}
+
+.overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.35);
+  display:none;
+  align-items:center;
+  justify-content:center;
+}
+.popup{
+  background:#FFF7ED;
+  padding:30px;
+  border-radius:24px;
+  text-align:center;
+}
+
+.theme-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:14px;
+}
+.theme-box{
+  width:100px;
+  height:100px;
+  border-radius:16px;
+  overflow:hidden;
+  cursor:pointer;
+}
+.theme-box img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+.dpad{
+  display:grid;
+  grid-template-columns:80px 80px 80px;
+  grid-template-rows:80px 80px 80px;
+  gap:10px;
+  justify-content:center;
+}
+
+.dpad-btn{
+  border-radius:18px;
+  border:none;
+  font-size:20px;
+  background:#E5E7EB;
+  cursor:pointer;
+}
+
+.up    { grid-column:2; grid-row:1; }
+.left  { grid-column:1; grid-row:2; }
+.pause { grid-column:2; grid-row:2; background:#FED7AA; font-weight:bold; }
+.right { grid-column:3; grid-row:2; }
+.down  { grid-column:2; grid-row:3; }
+/* Bottom Center Footer */
+.bottom-center{
+  position: fixed;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  font-size: 14px;
+  color: #7A5C3E;
+}
+
+.bottom-center a{
+  text-decoration: none;
+  color: #F59E0B;
+  font-weight: 600;
+  display: inline-block;
+  margin-bottom: 6px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="top-bar">
+  <button class="pause-btn" onclick="togglePause()">⏸ Pause</button>
+  <h1>🐍 Cozy Snake</h1>
+  <button class="shop-btn" onclick="openShopPopup()">🛒 Snake Shop</button>
+
+</div>
+
+<div class="main">
+  <div class="game-wrap">
+    <canvas id="game" width="520" height="520"></canvas>
+    <button class="theme-btn" onclick="openThemes()">🎨 Themes</button>
+<button class="theme-btn" onclick="toggleControls()">
+  📱 Press for Controls
+</button>
+
+<div id="controlsBox" style="display:none;margin-top:14px;">
+  <div class="dpad">
+<button class="dpad-btn up"
+  ontouchstart="moveDir('up')"
+  onclick="moveDir('up')">⬆</button>
+
+<button class="dpad-btn left"
+  ontouchstart="moveDir('left')"
+  onclick="moveDir('left')">⬅</button>
+
+<button class="dpad-btn pause"
+  ontouchstart="togglePause()"
+  onclick="togglePause()">PAUSE</button>
+
+<button class="dpad-btn right"
+  ontouchstart="moveDir('right')"
+  onclick="moveDir('right')">➡</button>
+
+<button class="dpad-btn down"
+  ontouchstart="moveDir('down')"
+  onclick="moveDir('down')">⬇</button>
+
+  </div>
+</div>
+
+
+  </div>
+
+  <div class="panel">
+    <div>🏆 High Score: <span id="highScore">0</span></div>
+    <div>🟡 Score: <span id="score">0</span></div>
+    <div>🐍 Length: <span id="length">1</span></div>
+
+    <div>❤️ Health</div>
+    <div class="health-bar">
+      <div class="health-fill" id="healthFill"></div>
+    </div>
+
+    <div id="shieldWrapper" style="display:none;margin-top:6px;">
+      🛡️ Shield
+      <div class="health-bar">
+        <div class="health-fill" id="shieldFill" style="background:#60A5FA;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- THEME POPUP -->
+<div class="overlay" id="themePopup">
+  <div class="popup">
+    <h3>🎨 Choose Theme</h3>
+    <div class="theme-grid">
+      <div class="theme-box" onclick="setTheme('theme1.png')"><img src="snake-assets/backgrounds/theme1.png"></div>
+      <div class="theme-box" onclick="setTheme('theme2.png')"><img src="snake-assets/backgrounds/theme2.png"></div>
+      <div class="theme-box" onclick="setTheme('theme3.png')"><img src="snake-assets/backgrounds/theme3.png"></div>
+    </div>
+    <br>
+    <button class="theme-btn" onclick="closeThemes()">Close</button>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+const ENABLE_SLOW = false;
+let usingTouch = false;
+
+
+/* IMAGES */
+const bg = new Image();
+bg.src = localStorage.getItem("snakeTheme")
+  ? `snake-assets/backgrounds/${localStorage.getItem("snakeTheme")}`
+  : "snake-assets/background.png";
+
+const poisonLiteImg = new Image(); poisonLiteImg.src="snake-assets/poisonlite.png";
+const poisonHeavyImg = new Image(); poisonHeavyImg.src="snake-assets/poison.png";
+const speedImg = new Image(); speedImg.src="snake-assets/speed.png";
+const slowImg = new Image(); slowImg.src="snake-assets/slow.png";
+const shieldImg = new Image(); shieldImg.src="snake-assets/shield.png";
+
+/* THEME */
+function openThemes(){ themePopup.style.display="flex"; }
+function closeThemes(){ themePopup.style.display="none"; }
+function setTheme(t){
+  bg.src=`snake-assets/backgrounds/${t}`;
+  localStorage.setItem("snakeTheme",t);
+  closeThemes();
+}
+function toggleControls(){
+  const box = document.getElementById("controlsBox");
+  box.style.display = box.style.display === "none" ? "block" : "none";
+}
+
+function moveDir(d){
+  if(paused) return;
+
+  usingTouch = true;
+
+  if(d==="up"    && dir.y!==1)  nextDir = {x:0,y:-1};
+  if(d==="down"  && dir.y!==-1) nextDir = {x:0,y:1};
+  if(d==="left"  && dir.x!==1)  nextDir = {x:-1,y:0};
+  if(d==="right" && dir.x!==-1) nextDir = {x:1,y:0};
+}
+
+/* GAME STATE */
+let snake=[], dir={x:1,y:0}, nextDir={x:1,y:0};
+let speed=2, paused=false, running=true;
+let score=0, health=100, grow=0;
+
+let displayLength = 1;
+let highScore = localStorage.getItem("cozySnakeHighScore") || 0;
+document.getElementById("highScore").textContent = highScore;
+
+let powerups=[], poisonLites=[], poisonHeavies=[];
+let speedUntil=0, slowUntil=0, shieldUntil=0;
+
+/* INIT */
+for(let i=0;i<25;i++) snake.push({x:260-i*8,y:260});
+
+/* FOOD */
+const fruits=[{e:"🍎",v:1,w:40},{e:"🍌",v:2,w:30},{e:"🍒",v:3,w:15},{e:"🍇",v:4,w:10},{e:"🍍",v:5,w:5}];
+function pickFruit(){
+  const bag=[]; fruits.forEach(f=>{for(let i=0;i<f.w;i++) bag.push(f)});
+  const f=bag[Math.floor(Math.random()*bag.length)];
+  return {...f,x:Math.random()*460+30,y:Math.random()*460+30};
+}
+let food = pickFruit();
+
+/* INPUT */
+document.addEventListener("keydown", e => {
+  usingTouch = false;
+
+  // 🔴 SPACEBAR → Pause
+  if(e.code === "Space"){
+    e.preventDefault(); // prevents page scroll
+    if(!paused) togglePause();
+    return;
+  }
+
+  if(paused) return;
+
+  const key = e.key.toLowerCase();
+
+  if((key === "arrowup" || key === "w") && dir.y !== 1)
+    nextDir = { x: 0, y: -1 };
+
+  if((key === "arrowdown" || key === "s") && dir.y !== -1)
+    nextDir = { x: 0, y: 1 };
+
+  if((key === "arrowleft" || key === "a") && dir.x !== 1)
+    nextDir = { x: -1, y: 0 };
+
+  if((key === "arrowright" || key === "d") && dir.x !== -1)
+    nextDir = { x: 1, y: 0 };
+});
+
+function openShopPopup(){
+  document.getElementById("shopPopup").style.display = "flex";
+}
+function closeShopPopup(){
+  document.getElementById("shopPopup").style.display = "none";
+}
+
+/* UPDATE */
+function update(){
+  if(!running||paused) return;
+
+  const now=Date.now();
+  speed = now < speedUntil ? 3 : 2;
+
+  dir=nextDir;
+  const nx=snake[0].x+dir.x*speed;
+  const ny=snake[0].y+dir.y*speed;
+
+  snake.unshift({x:(nx+520)%520,y:(ny+520)%520});
+  grow>0?grow--:snake.pop();
+
+  for(let i=8;i<snake.length;i++)
+    if(Math.hypot(nx-snake[i].x,ny-snake[i].y)<8) endGame();
+
+  if(Math.hypot(nx-food.x,ny-food.y)<16){
+    score += food.v;
+    grow += 3;
+    displayLength++;
+    health = Math.min(100, health + 1);
+    food=pickFruit();
+
+    if(Math.random()<0.4) poisonLites.push({x:Math.random()*460+30,y:Math.random()*460+30,b:now});
+    if(Math.random()<0.2) poisonHeavies.push({x:Math.random()*460+30,y:Math.random()*460+30,b:now});
+    if(Math.random()<0.1) powerups.push({type:"speed",x:Math.random()*460+30,y:Math.random()*460+30});
+    if(ENABLE_SLOW && Math.random()<0.08)
+      powerups.push({type:"slow",x:Math.random()*460+30,y:Math.random()*460+30});
+    if(Math.random()<0.06) powerups.push({type:"shield",x:Math.random()*460+30,y:Math.random()*460+30});
+  }
+
+  poisonLites=poisonLites.filter(p=>{
+    if(now-p.b>20000) return false;
+    if(Math.hypot(nx-p.x,ny-p.y)<16 && now>shieldUntil){health-=8; return false;}
+    return true;
+  });
+  poisonHeavies=poisonHeavies.filter(p=>{
+    if(now-p.b>23000) return false;
+    if(Math.hypot(nx-p.x,ny-p.y)<16 && now>shieldUntil){health-=17; return false;}
+    return true;
+  });
+
+  powerups=powerups.filter(p=>{
+    if(Math.hypot(nx-p.x,ny-p.y)<16){
+      if(p.type==="speed") speedUntil=now+5000;
+      if(ENABLE_SLOW && p.type==="slow") slowUntil=now+4000;
+      if(p.type==="shield") shieldUntil=now+5000;
+      return false;
+    }
+    return true;
+  });
+
+  updateUI(); updateHealth(); updateShield();
+}
+
+/* DRAW */
+function draw(){
+  ctx.clearRect(0,0,520,520);
+  ctx.drawImage(bg,0,0,520,520);
+  ctx.fillStyle="rgba(255,248,230,0.55)";
+  ctx.fillRect(0,0,520,520);
+
+  snake.forEach((s,i)=>{
+    ctx.beginPath();
+    ctx.arc(s.x,s.y,i?8:10,0,Math.PI*2);
+    ctx.fillStyle=i?"#22C55E":"#14532D";
+    ctx.fill();
+  });
+
+  ctx.font="28px Segoe UI Emoji";
+  ctx.textAlign="center";
+  ctx.textBaseline="middle";
+  ctx.fillText(food.e,food.x,food.y);
+
+  poisonLites.forEach(p=>ctx.drawImage(poisonLiteImg,p.x-14,p.y-14,28,28));
+  poisonHeavies.forEach(p=>ctx.drawImage(poisonHeavyImg,p.x-14,p.y-14,28,28));
+  powerups.forEach(p=>{
+    const img=p.type==="speed"?speedImg:p.type==="slow"?slowImg:shieldImg;
+    ctx.drawImage(img,p.x-14,p.y-14,28,28);
+  });
+}
+
+(function loop(){ update(); draw(); requestAnimationFrame(loop); })();
+
+/* UI */
+function endGame(){
+  running=false;
+  paused=true;
+
+  if(score>highScore){
+    highScore=score;
+    localStorage.setItem("cozySnakeHighScore",highScore);
+  }
+
+  document.getElementById("finalScore").textContent=score;
+  document.getElementById("finalLength").textContent=displayLength;
+  document.getElementById("gameOverPopup").style.display="flex";
+}
+
+function updateUI(){
+  document.getElementById("score").textContent=score;
+  document.getElementById("length").textContent=displayLength;
+  document.getElementById("highScore").textContent=highScore;
+}
+function updateHealth(){
+  healthFill.style.width=health+"%";
+  healthFill.style.background=health>60?"#22C55E":health>30?"#FACC15":"#EF4444";
+}
+function updateShield(){
+  const remaining = shieldUntil - Date.now();
+  if(remaining>0){
+    shieldWrapper.style.display="block";
+    shieldFill.style.width=(remaining/5000)*100+"%";
+    shieldWrapper.style.opacity = remaining<1000 ? (Math.floor(Date.now()/150)%2?"0.3":"1") : "1";
+  }else{
+    shieldWrapper.style.display="none";
+    shieldWrapper.style.opacity="1";
+  }
+}
+function togglePause(){
+  if(!paused){
+    paused = true;
+    document.getElementById("pausePopup").style.display = "flex";
+  }
+}
+
+function startResume(){
+  let count = 3;
+  const cd = document.getElementById("countdown");
+  cd.textContent = count;
+
+  const timer = setInterval(()=>{
+    count--;
+    if(count === 0){
+      clearInterval(timer);
+      cd.textContent = "";
+      document.getElementById("pausePopup").style.display = "none";
+      paused = false;
+    }else{
+      cd.textContent = count;
+    }
+  },1000);
+}
+
+updateHealth();
+</script>
+
+<!-- GAME OVER POPUP -->
+<div class="overlay" id="gameOverPopup">
+  <div class="popup">
+    <h2>💀 Game Over</h2>
+    <p>🟡 Score: <span id="finalScore"></span></p>
+    <p>🐍 Length: <span id="finalLength"></span></p>
+    <br>
+    <button class="theme-btn" onclick="location.reload()">🔁 Restart</button>
+    <br><br>
+    <a href="../index.html" style="text-decoration:none;color:#3F2E2E;">⬅ Return to Cozy Games</a>
+  </div>
+</div>
+<!-- SHOP POPUP -->
+<div class="overlay" id="shopPopup">
+  <div class="popup">
+    <h2>🚧 Under Construction</h2>
+    <p>Coming Soon ✨🐍🛠️</p>
+    <br>
+    <button class="theme-btn" onclick="closeShopPopup()">Return</button>
+  </div>
+</div>
+<!-- PAUSE POPUP -->
+<div class="overlay" id="pausePopup">
+  <div class="popup">
+    <h2>⏸ Game Paused</h2>
+    <p>Take a breath 🌿</p>
+    <br>
+    <button class="theme-btn" onclick="startResume()">▶ Press to Resume</button>
+    <h1 id="countdown" style="margin-top:12px;"></h1>
+  </div>
+</div>
+<!-- Bottom Center Navigation -->
+<div class="bottom-center">
+  <a href="../index.html">Return to CozyGames</a><br>
+  Made with ❤️ by Pratyush
+</div>
+
+</body>
+</html>

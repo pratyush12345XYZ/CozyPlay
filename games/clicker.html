@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cozy Clicker</title>
+
+<style>
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: 'Segoe UI', sans-serif;
+    background: #FFF7ED;
+    color: #3F2E2E;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* TOP BAR */
+  .top-bar {
+    width: 100%;
+    padding: 20px 30px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .title {
+    font-size: 2.4rem;
+    font-weight: 600;
+  }
+
+  .shop-btn {
+    position: absolute;
+    right: 30px;
+    padding: 10px 20px;
+    border-radius: 25px;
+    background: #F59E0B;
+    color: white;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: 0.3s;
+  }
+
+  .shop-btn:hover {
+    background: #D97706;
+  }
+
+  /* MAIN CONTENT */
+  .content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+
+  .tagline {
+    color: #7C4A2D;
+    margin-bottom: 6px;
+  }
+
+  .hint {
+    font-size: 0.9rem;
+    color: #9A6A4F;
+    margin-bottom: 20px;
+  }
+
+  .coins {
+    font-size: 1.3rem;
+    margin-bottom: 20px;
+  }
+
+  .character {
+    font-size: 8rem;               /* 👈 bigger mascot */
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.1s ease;
+  }
+
+  .character:active {
+    transform: scale(0.92);
+  }
+
+  /* FOOTER */
+  .footer {
+    width: 100%;
+    text-align: center;
+    padding: 20px 0 30px;
+  }
+
+  .back-btn {
+    display: inline-block;
+    padding: 10px 22px;
+    border-radius: 30px;
+    background: #FED7AA;
+    text-decoration: none;
+    color: #3F2E2E;
+    font-size: 0.9rem;
+    transition: 0.3s;
+  }
+
+  .back-btn:hover {
+    background: #F59E0B;
+    color: white;
+  }
+
+  .made-with {
+    margin-top: 10px;
+    font-size: 0.8rem;
+    color: #9A6A4F;
+  }
+</style>
+</head>
+
+<body>
+
+  <!-- TOP -->
+  <div class="top-bar">
+    <div class="title">🐾 Cozy Clicker</div>
+    <a class="shop-btn" href="buy.html">🛒 Shop</a>
+  </div>
+
+  <!-- CENTER -->
+  <div class="content">
+    <p class="tagline">Click gently. Relax deeply.</p>
+    <div class="hint">(press the mascot)</div>
+
+    <div class="coins">🪙 Coins: <span id="coins">0</span></div>
+
+    <div class="character" id="character" onclick="clickChar()">🐰</div>
+  </div>
+
+  <!-- BOTTOM -->
+  <div class="footer">
+    <a class="back-btn" href="../index.html">⬅ Back to CozyPlay</a>
+    <div class="made-with">Made with ❤️ by Pratyush</div>
+  </div>
+
+<script>
+  let coins = Number(localStorage.getItem("coins")) || 0;
+  let activeSkin = localStorage.getItem("activeSkin") || "🐰";
+
+  document.getElementById("coins").innerText = coins;
+  document.getElementById("character").innerText = activeSkin;
+
+  function clickChar() {
+    coins++;
+    localStorage.setItem("coins", coins);
+    document.getElementById("coins").innerText = coins;
+  }
+</script>
+
+</body>
+</html>

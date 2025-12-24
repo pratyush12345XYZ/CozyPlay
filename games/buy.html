@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cozy Shop</title>
+
+<style>
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: #FFF7ED;
+    color: #3F2E2E;
+    text-align: center;
+    padding: 40px;
+  }
+
+  h1 { margin-bottom: 10px; }
+  .coins { font-size: 1.2rem; margin-bottom: 30px; }
+
+  .shop {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 20px;
+    max-width: 720px;
+    margin: auto;
+  }
+
+  .item {
+    background: #FED7AA;
+    border-radius: 20px;
+    padding: 18px;
+  }
+
+  .emoji { font-size: 2.5rem; }
+
+  .price {
+    margin: 6px 0;
+    font-size: 0.8rem;
+  }
+
+  button {
+    margin: 4px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: none;
+    font-size: 0.75rem;
+    cursor: pointer;
+  }
+
+  .buy { background: #F59E0B; color: white; }
+  .use { background: #34D399; color: #064E3B; }
+  .sell { background: #FCA5A5; color: #7F1D1D; }
+  .inuse { background: #A7F3D0; color: #065F46; cursor: default; }
+
+  .nav-btn {
+    display: inline-block;
+    margin-top: 30px;
+    padding: 10px 22px;
+    border-radius: 30px;
+    background: #FED7AA;
+    text-decoration: none;
+    color: #3F2E2E;
+  }
+
+  footer {
+    margin-top: 40px;
+    font-size: 0.8rem;
+    color: #9A6A4F;
+  }
+</style>
+</head>
+
+<body>
+
+<h1>🛒 Cozy Shop</h1>
+<div class="coins">🪙 Coins: <span id="coins">0</span></div>
+
+<div class="shop" id="shop"></div>
+
+<a class="nav-btn" href="clicker.html">⬅ Back to Clicker</a>
+
+<footer>Made with ❤️ by Pratyush</footer>
+
+<script>
+  const avatars = [
+    {e:"🐰", p:0},
+    {e:"🐶", p:200},{e:"🐱", p:200},{e:"🐻", p:200},{e:"🐼", p:200},{e:"🐨", p:200},
+    {e:"🦊", p:500},{e:"🐸", p:500},{e:"🐵", p:500},
+    {e:"🐯", p:1000},{e:"🦁", p:1000},
+    {e:"🐮", p:2000},{e:"🐷", p:2000},
+    {e:"🐔", p:5000},{e:"🐧", p:5000},
+    {e:"🦄", p:10000},{e:"🐲", p:10000},
+    {e:"🐉", p:20000},
+    {e:"🦖", p:50000},
+    {e:"👑", p:100000}
+  ];
+
+  let coins = Number(localStorage.getItem("coins")) || 0;
+  let owned = JSON.parse(localStorage.getItem("ownedSkins")) || ["🐰"];
+  let active = localStorage.getItem("activeSkin") || "🐰";
+
+  document.getElementById("coins").innerText = coins;
+  const shop = document.getElementById("shop");
+
+  function render() {
+    shop.innerHTML = "";
+
+    avatars.forEach(a => {
+      const div = document.createElement("div");
+      div.className = "item";
+
+      let buttons = "";
+
+      if (!owned.includes(a.e)) {
+        buttons = `<button class="buy" onclick="buy('${a.e}', ${a.p})">Buy</button>`;
+      } else if (active === a.e) {
+        buttons = `
+          <button class="inuse">In Use</button>
+          <button class="sell" onclick="sell('${a.e}', ${a.p})">Sell</button>
+        `;
+      } else {
+        buttons = `
+          <button class="use" onclick="useSkin('${a.e}')">Use</button>
+          <button class="sell" onclick="sell('${a.e}', ${a.p})">Sell</button>
+        `;
+      }
+
+      div.innerHTML = `
+        <div class="emoji">${a.e}</div>
+        <div class="price">${a.p === 0 ? "Free" : a.p + " coins"}</div>
+        ${buttons}
+      `;
+
+      shop.appendChild(div);
+    });
+
+    // Coming soon
+    const soon = document.createElement("div");
+    soon.className = "item";
+    soon.innerHTML = `<div class="emoji">❓</div><div class="price">New avatar coming soon</div>`;
+    shop.appendChild(soon);
+  }
+
+  function buy(e, p) {
+    if (coins >= p) {
+      coins -= p;
+      owned.push(e);
+      save();
+    } else alert("Not enough coins 😢");
+  }
+
+  function useSkin(e) {
+    active = e;
+    save();
+  }
+
+  function sell(e, p) {
+    owned = owned.filter(x => x !== e);
+    coins += Math.floor(p / 2);
+
+    if (active === e) active = "🐰";
+    save();
+  }
+
+  function save() {
+    localStorage.setItem("coins", coins);
+    localStorage.setItem("ownedSkins", JSON.stringify(owned));
+    localStorage.setItem("activeSkin", active);
+    document.getElementById("coins").innerText = coins;
+    render();
+  }
+
+  render();
+</script>
+
+</body>
+</html>
